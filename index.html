@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleek Type - Speed Test</title>
+    <style>
+        :root {
+            --bg-color: #1e1e24;
+            --main-color: #e2b714;
+            --caret-color: #e2b714;
+            --sub-color: #646669;
+            --text-color: #d1d0c5;
+            --error-color: #ca4754;
+            --font-mono: 'Fira Code', 'Courier New', Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-mono);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 90%;
+            padding: 2rem;
+        }
+
+        /* Header & Stats styling */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--main-color);
+            letter-spacing: 1px;
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 2rem;
+            font-size: 1.2rem;
+        }
+
+        .stat-box {
+            color: var(--sub-color);
+        }
+
+        .stat-value {
+            color: var(--main-color);
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        /* Typing Area */
+        .typing-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
+            cursor: text;
+        }
+
+        /* Hidden Input field to capture global typing */
+        #hidden-input {
+            position: absolute;
+            opacity: 0;
+            z-index: -1;
+        }
+
+        .words-wrapper {
+            font-size: 1.5rem;
+            line-height: 2.2rem;
+            color: var(--sub-color);
+            word-break: break-word;
+            user-select: none;
+            letter-spacing: 0.5px;
+        }
+
+        /* Character States */
+        .char {
+            position: relative;
+            transition: color 0.1s ease;
+        }
+
+        .char.correct {
+            color: var(--text-color);
+        }
+
+        .char.incorrect {
+            color: var(--error-color);
+            background: rgba(202, 71, 84, 0.1);
+            border-radius: 2px;
+        }
+
+        /* Custom Caret/Cursor */
+        .char.current::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 2px;
+            width: 2px;
+            height: 1.6rem;
+            background-color: var(--caret-color);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* Controls styling */
+        .controls {
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-restart {
+            background: none;
+            border: none;
+            color: var(--sub-color);
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-restart:hover {
+            color: var(--text-color);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-restart:focus {
+            outline: none;
+        }
+
+        /* Blur warning when field is not focused */
+        .focus-error {
+            position: absolute;
+            inset: 0;
+            background: rgba(30, 30, 36, 0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+            font-size: 1.1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .typing-card:not(.focused) .focus-error {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo">sleektype</div>
+            <div class="stats-container">
+                <div class="stat-box">time: <span id="timer" class="stat-value">30</span>s</div>
+                <div class="stat-box">wpm: <span id="wpm" class="stat-value">0</span></div>
+                <div class="stat-box">accuracy: <span id="accuracy" class="stat-value">100</span>%</div>
+            </div>
+        </div>
+
+        <div class="typing-card" id="typing-card">
+            <input type="text" id="hidden-input" autocomplete="off" autofocus>
+            <div class="words-wrapper" id="words-container"></div>
+            <div class="focus-error">Click here or press any key to focus</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-restart" id="btn-restart">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                Restart Test
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const sampleQuotes = [
+            "The art of programming is the art of organizing complexity, of mastering multitude and avoiding its millions of monstrous bugs.",
+            "Simplicity is a great virtue but it requires hard work to achieve it and education to appreciate it. And to make things worse: complexity sells better.",
+            "Modern UI design isn't just about beautiful color palettes; it is fundamentally about removing unnecessary friction between the user and the system.",
+            "Asynchronous systems allow workflows to operate efficiently, making applications fast and responsive even under a heavy load of structural tasks.",
+            "Clean code always looks like it was written by someone who cares. There is nothing obvious you can do to make it any better than it already is."
+        ];
+
+        const wordsContainer = document.getElementById('words-container');
+        const hiddenInput = document.getElementById('hidden-input');
+        const typingCard = document.getElementById('typing-card');
+        const timerDisplay = document.getElementById('timer');
+        const wpmDisplay = document.getElementById('wpm');
+        const accuracyDisplay = document.getElementById('accuracy');
+        const restartBtn = document.getElementById('btn-restart');
+
+        let testTime = 30;
+        let timeLeft = testTime;
+        let timerInterval = null;
+        let isTestRunning = false;
+        let characterSpans = [];
+        let totalTyped = 0;
+        let correctTyped = 0;
+
+        // Initialize Application
+        function initTest() {
+            clearInterval(timerInterval);
+            timeLeft = testTime;
+            isTestRunning = false;
+            totalTyped = 0;
+            correctTyped = 0;
+
+            timerDisplay.textContent = timeLeft;
+            wpmDisplay.textContent = '0';
+            accuracyDisplay.textContent = '100';
+            hiddenInput.value = '';
+
+            // Fetch random quote and construct individual character spans
+            const randomQuote = sampleQuotes[Math.floor(Math.random() * sampleQuotes.length)];
+            wordsContainer.innerHTML = '';
+
+            characterSpans = randomQuote.split('').map(char => {
+                const span = document.createElement('span');
+                span.classList.add('char');
+                span.innerText = char;
+                wordsContainer.appendChild(span);
+                return span;
+            });
+
+            if (characterSpans.length > 0) {
+                characterSpans[0].classList.add('current');
+            }
+
+            hiddenInput.focus();
+            typingCard.classList.add('focused');
+        }
+
+        // Timer Execution
+        function startTimer() {
+            isTestRunning = true;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+
+                calculateMetrics();
+
+                if (timeLeft <= 0) {
+                    endTest();
+                }
+            }, 1000);
+        }
+
+        function endTest() {
+            clearInterval(timerInterval);
+            hiddenInput.disabled = true;
+            typingCard.classList.remove('focused');
+            // Final metrics check
+            calculateMetrics();
+        }
+
+        // Formulaic Processing for Performance Tracking
+        function calculateMetrics() {
+            if (totalTyped === 0) return;
+
+            // Standard WPM definition uses 5 typed characters as 1 word
+            const timeElapsedInMinutes = (testTime - timeLeft) / 60;
+            if (timeElapsedInMinutes > 0) {
+                const wpm = Math.round((correctTyped / 5) / timeElapsedInMinutes);
+                wpmDisplay.textContent = Math.max(0, wpm);
+            }
+
+            const accuracy = Math.round((correctTyped / totalTyped) * 100);
+            accuracyDisplay.textContent = isNaN(accuracy) ? 100 : accuracy;
+        }
+
+        // Input Management Logic
+        hiddenInput.addEventListener('input', (e) => {
+            if (!isTestRunning && timeLeft > 0) {
+                startTimer();
+            }
+
+            const inputValue = hiddenInput.value;
+            const inputLength = inputValue.length;
+            totalTyped = inputLength;
+
+            // Handle backspacing or current tracking
+            characterSpans.forEach((span, index) => {
+                span.classList.remove('current', 'correct', 'incorrect');
+
+                if (index < inputLength) {
+                    if (inputValue[index] === span.innerText) {
+                        span.classList.add('correct');
+                    } else {
+                        span.classList.add('incorrect');
+                    }
+                }
+            });
+
+            // Re-evaluate total correct items
+            correctTyped = wordsContainer.querySelectorAll('.char.correct').length;
+
+            // Highlight the exact active index cursor location
+            if (inputLength < characterSpans.length) {
+                characterSpans[inputLength].classList.add('current');
+            } else {
+                endTest(); // Finished early
+            }
+
+            calculateMetrics();
+        });
+
+        // App Focus / Blur management for cleaner UI interaction
+        typingCard.addEventListener('click', () => {
+            if (timeLeft > 0) hiddenInput.focus();
+        });
+        hiddenInput.addEventListener('focus', () => typingCard.classList.add('focused'));
+        hiddenInput.addEventListener('blur', () => typingCard.classList.remove('focused'));
+
+        // Listen globally to let users start typing instantly
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement !== hiddenInput && timeLeft > 0 && e.key.length === 1) {
+                hiddenInput.focus();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            hiddenInput.disabled = false;
+            initTest();
+        });
+
+        // Fire on Load
+        initTest();
+    </script>
+</body>
+
+</html>
