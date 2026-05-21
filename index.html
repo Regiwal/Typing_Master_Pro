@@ -4,38 +4,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sleek Type - Speed Test</title>
+    <title>SleekType - Premium Speed Test</title>
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
+    <!-- Chart.js for beautiful results graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
     <div class="container">
-        <div class="header">
-            <div class="logo">sleektype</div>
-            <div class="stats-container">
-                <div class="stat-box">time: <span id="timer" class="stat-value">30</span>s</div>
-                <div class="stat-box">wpm: <span id="wpm" class="stat-value">0</span></div>
-                <div class="stat-box">accuracy: <span id="accuracy" class="stat-value">100</span>%</div>
+        <!-- Header Section -->
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo"><span>sleek</span>type</div>
             </div>
-        </div>
+            <div class="nav-controls">
+                <!-- Sound Toggle Select -->
+                <button class="btn-control" id="btn-sound-toggle" title="Toggle Typing Sounds">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                    <span id="sound-label">MX Blue</span>
+                </button>
 
-        <div class="typing-card" id="typing-card">
+                <!-- History Trigger -->
+                <button class="btn-control" id="btn-history" title="View Typing History">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    History
+                </button>
+
+                <!-- Theme Switcher -->
+                <div class="select-wrapper">
+                    <select class="select-theme" id="theme-selector">
+                        <option value="default">Sleek Dark</option>
+                        <option value="cyberpunk">Cyberpunk</option>
+                        <option value="sakura">Sakura Rose</option>
+                        <option value="neon_mint">Neon Mint</option>
+                        <option value="retro">Retro Terminal</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- Configuration Panel -->
+        <section class="config-bar" id="config-bar">
+            <div class="mode-selectors">
+                <button class="mode-btn active" data-mode="time">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    time
+                </button>
+                <button class="mode-btn" data-mode="words">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    words
+                </button>
+                <button class="mode-btn" data-mode="zen">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                    </svg>
+                    zen
+                </button>
+                <button class="mode-btn" data-mode="custom">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    custom
+                </button>
+            </div>
+            
+            <div class="sub-config-group" id="sub-config-group">
+                <!-- Populated dynamically (e.g. 15, 30, 60s / 10, 25, 50w) -->
+            </div>
+        </section>
+
+        <!-- Live Metrics Display -->
+        <section class="stats-bar" id="stats-bar">
+            <div class="stat-item">
+                <div class="stat-lbl" id="progress-label">time</div>
+                <div class="stat-num" id="live-progress">30</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-lbl">wpm</div>
+                <div class="stat-num" id="live-wpm">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-lbl">accuracy</div>
+                <div class="stat-num" id="live-accuracy">100%</div>
+            </div>
+        </section>
+
+        <!-- Typing Canvas Card -->
+        <main class="typing-card" id="typing-card">
             <input type="text" id="hidden-input" autocomplete="off" autofocus>
-            <div class="words-wrapper" id="words-container"></div>
-            <div class="focus-error">Click here or press any key to focus</div>
-        </div>
+            <div class="words-wrapper" id="words-container">
+                <!-- Characters loaded here -->
+            </div>
+            <div class="focus-error">
+                <div class="focus-icon">⌨</div>
+                <div>Click to focus or press any key to start typing</div>
+            </div>
+        </main>
 
+        <!-- Control Actions (Restart) -->
         <div class="controls">
-            <button class="btn-restart" id="btn-restart">
+            <button class="btn-control" id="btn-restart">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                 </svg>
                 Restart Test
             </button>
         </div>
+
+        <!-- Visual Keyboard Visualizer -->
+        <section class="keyboard-section" id="keyboard-visualizer">
+            <div class="kb-row">
+                <div class="key" id="key-q">q</div>
+                <div class="key" id="key-w">w</div>
+                <div class="key" id="key-e">e</div>
+                <div class="key" id="key-r">r</div>
+                <div class="key" id="key-t">t</div>
+                <div class="key" id="key-y">y</div>
+                <div class="key" id="key-u">u</div>
+                <div class="key" id="key-i">i</div>
+                <div class="key" id="key-o">o</div>
+                <div class="key" id="key-p">p</div>
+                <div class="key" id="key-[">[</div>
+                <div class="key" id="key-]">]</div>
+            </div>
+            <div class="kb-row">
+                <div class="key" id="key-a">a</div>
+                <div class="key" id="key-s">s</div>
+                <div class="key" id="key-d">d</div>
+                <div class="key" id="key-f">f</div>
+                <div class="key" id="key-g">g</div>
+                <div class="key" id="key-h">h</div>
+                <div class="key" id="key-j">j</div>
+                <div class="key" id="key-k">k</div>
+                <div class="key" id="key-l">l</div>
+                <div class="key" id="key-;">;</div>
+                <div class="key" id="key-'" style="min-width: 50px;">'</div>
+            </div>
+            <div class="kb-row">
+                <div class="key" id="key-z">z</div>
+                <div class="key" id="key-x">x</div>
+                <div class="key" id="key-c">c</div>
+                <div class="key" id="key-v">v</div>
+                <div class="key" id="key-b">b</div>
+                <div class="key" id="key-n">n</div>
+                <div class="key" id="key-m">m</div>
+                <div class="key" id="key-,">,</div>
+                <div class="key" id="key-.">.</div>
+                <div class="key" id="key-/">/</div>
+            </div>
+            <div class="kb-row">
+                <div class="key space" id="key-space">space</div>
+            </div>
+        </section>
+
+        <!-- Dynamic Results Screen -->
+        <section class="results-panel" id="results-panel">
+            <div class="results-stats">
+                <div class="results-card">
+                    <div class="res-lbl">wpm</div>
+                    <div class="res-num" id="res-wpm">0</div>
+                </div>
+                <div class="results-card">
+                    <div class="res-lbl">accuracy</div>
+                    <div class="res-num" id="res-accuracy">0%</div>
+                </div>
+                <div class="metrics-grid">
+                    <div class="results-card">
+                        <div class="res-lbl">raw wpm</div>
+                        <div class="res-num-sub" id="res-raw">0</div>
+                    </div>
+                    <div class="results-card">
+                        <div class="res-lbl">mistakes</div>
+                        <div class="res-num-sub" id="res-mistakes">0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-card">
+                <div class="res-lbl">Performance History Chart</div>
+                <div class="chart-container">
+                    <canvas id="results-chart"></canvas>
+                </div>
+                <div>
+                    <div class="res-lbl" style="margin-top: 1rem;">Achievements Unlocked</div>
+                    <div class="badges-container" id="badges-container">
+                        <!-- badges loaded here -->
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 
+    <!-- History Drawer Side Panel -->
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <div class="history-drawer" id="history-drawer">
+        <div class="drawer-header">
+            <h3>Typing Performance Log</h3>
+            <button class="btn-control" id="btn-close-drawer" style="padding: 0.3rem 0.6rem;">&times;</button>
+        </div>
+        <div class="history-list" id="history-list">
+            <!-- history items loaded here -->
+        </div>
+        <button class="btn-control" id="btn-clear-history" style="width: 100%; justify-content: center; margin-top: 1rem;">
+            Clear All History
+        </button>
+    </div>
+
+    <!-- Custom Text Paragraph Pasting Modal -->
+    <div class="custom-text-modal" id="custom-text-modal">
+        <div class="modal-content">
+            <h3>Input Custom Text</h3>
+            <p style="font-size: 0.85rem; color: var(--text-sub);">Paste your own paragraph or code to practice. Max 1000 characters.</p>
+            <textarea id="custom-text-input" placeholder="Type or paste your text here..."></textarea>
+            <div class="modal-actions">
+                <button class="btn-control" id="btn-modal-cancel">Cancel</button>
+                <button class="btn-control active" id="btn-modal-save">Apply Text</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Area -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Application Script -->
     <script src="script.js"></script>
 </body>
 
